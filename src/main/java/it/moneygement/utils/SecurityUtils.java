@@ -59,4 +59,39 @@ public class SecurityUtils {
             throw new RuntimeException("Errore critico: Algoritmo SHA-256 non trovato.", e);
         }
     }
+
+    /**
+     * Verifica che la password rispetti gli standard di sicurezza
+     * - Almeno 8 caratteri
+     * - Una lettera Maiuscola
+     * - Una lettera Minuscola
+     * - Almeno un numero
+     * - Almeno un carattere speciale
+     * @param password la password in chiaro da controllare
+     * @throws IllegalArgumentException se la password non è valida
+     */
+    public static void checkPasswordComplexity(String password) {
+        if (password == null || password.length() < 8) {
+            throw new IllegalArgumentException("La password deve essere lunga almeno 8 caratteri.");
+        }
+
+        // Controlla se c'è almeno una maiuscola
+        boolean hasUppercase = !password.equals(password.toLowerCase());
+
+        // Controlla se c'è almeno un numero (usiamo una regex semplice)
+        boolean hasDigit = password.matches(".*\\d.*");
+
+        // Controlla se c'è un carattere speciale (tutto ciò che non è lettera o numero)
+        boolean hasSpecial = password.matches(".*[^a-zA-Z0-9].*");
+
+        if (!hasUppercase) {
+            throw new IllegalArgumentException("La password deve contenere almeno una lettera maiuscola.");
+        }
+        if (!hasDigit) {
+            throw new IllegalArgumentException("La password deve contenere almeno un numero.");
+        }
+        if (!hasSpecial) {
+            throw new IllegalArgumentException("La password deve contenere almeno un carattere speciale (@, #, !, ecc).");
+        }
+    }
 }

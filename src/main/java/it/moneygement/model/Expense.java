@@ -18,6 +18,7 @@ public class Expense {
     private double importo;
     private LocalDateTime data;
     private int id;
+    private int idUtente;
 
     /**
      * Costruttore della classe Expense.
@@ -177,6 +178,28 @@ public class Expense {
             throw new DatiNonValidiException("L'id non può essere 0 o negativo");
         }
         this.id = id;
+    }
+
+    /**
+     * Restituisce l'ID dell'utente proprietario della spesa.
+     * @return l'ID dell'utente.
+     */
+    public int idUtente() {
+        return idUtente;
+    }
+
+    /**
+     * Imposta l'utente proprietario della spesa.
+     * Fondamentale per salvare la spesa nel database collegata alla persona giusta.
+     *
+     * @param idUtente l'ID dell'utente (deve essere > 0).
+     * @throws DatiNonValidiException se l'id è <= 0.
+     */
+    public void setIdUtente(int idUtente) {
+        if (idUtente <= 0) {
+            throw new DatiNonValidiException("L'ID utente non valido per questa spesa");
+        }
+        this.idUtente = idUtente;
     }
 
     /**

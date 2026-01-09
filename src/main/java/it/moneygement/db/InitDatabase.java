@@ -31,7 +31,9 @@ public class InitDatabase {
             "categoria TEXT NOT NULL, " +
             "descrizione TEXT NOT NULL, " +
             "importo REAL NOT NULL, " +
-            "data TEXT NOT NULL);";
+            "data TEXT NOT NULL," +
+            "user_id INTEGER," +
+            "FOREIGN KEY (user_id) REFERENCES user(id));";
 
     /**
      * Esegue la procedura di inizializzazione del database.

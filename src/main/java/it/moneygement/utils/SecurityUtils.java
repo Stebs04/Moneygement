@@ -70,9 +70,9 @@ public class SecurityUtils {
      * @param password la password in chiaro da controllare
      * @throws IllegalArgumentException se la password non è valida
      */
-    public static void checkPasswordComplexity(String password) {
+    public static boolean checkPasswordComplexity(String password) {
         if (password == null || password.length() < 8) {
-            throw new IllegalArgumentException("La password deve essere lunga almeno 8 caratteri.");
+            return false;
         }
 
         // Controlla se c'è almeno una maiuscola
@@ -85,13 +85,14 @@ public class SecurityUtils {
         boolean hasSpecial = password.matches(".*[^a-zA-Z0-9].*");
 
         if (!hasUppercase) {
-            throw new IllegalArgumentException("La password deve contenere almeno una lettera maiuscola.");
+           return false;
         }
         if (!hasDigit) {
-            throw new IllegalArgumentException("La password deve contenere almeno un numero.");
+           return false;
         }
         if (!hasSpecial) {
-            throw new IllegalArgumentException("La password deve contenere almeno un carattere speciale (@, #, !, ecc).");
+            return false;
         }
+        return true;
     }
 }

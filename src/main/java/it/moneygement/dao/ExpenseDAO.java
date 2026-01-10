@@ -37,6 +37,12 @@ public class ExpenseDAO {
 
     // SEARCH BY CATEGORY: Cerca una spesa in base alla categoria
     private final String SEARCH_BY_CATEGORY = "SELECT * FROM expense WHERE user_id = ? AND categoria = ?;";
+    // SEARCH BY DATE: cerca una spesa in base alla data
+    private final String SEARCH_BY_DATE = "SELECT * FROM expense WHERE user_id = ? AND data = ?;";
+    // AVG: Calcola la media degli importi per un mese specifico
+    private final String AVG_MONTHLY_QUERY = "SELECT AVG(importo) FROM expense WHERE user_id = ? AND data LIKE ?;";
+    // SUM: Calcola la somma totale delle spese per un anno specifico
+    private final String TOTAL_ANNUAL_QUERY = "SELECT SUM(importo) FROM expense WHERE user_id = ? AND data LIKE ?;";
 
 
     // --- METODI CRUD ---
@@ -222,5 +228,118 @@ public class ExpenseDAO {
         e.setIdUtente(userId);
 
         return e;
+    }
+
+    /**
+     * Ricera una spesa con una certa data
+     * @param userId l'Id dell'utente a cui è abbinata la spesa
+     * @param data la data per la ricerca della spesa
+     * @return la lista delle spese trovate in quella data
+     */
+    public List<Expense> searchByDate(int userId, String data){
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        List<Expense> spese = new ArrayList<>();
+        try{
+            Connection conn = DbConnection.getInstance().getConnection();
+            pstmt = conn.prepareStatement(SEARCH_BY_DATE);
+            pstmt.setInt(1, userId);
+            pstmt.setString(2, data);
+            rs = pstmt.executeQuery();
+            while(rs.next()){
+                Expense spesa = mapRowToExpense(rs);
+                spese.add(spesa);
+            }
+            return spese;
+        }catch (SQLException e){
+            System.err.println("Nessuna spesa trovata in questa data!!");
+        }finally {
+            DatabaseHelper.close(pstmt, rs);
+        }
+        return spese;
+    }
+    /**
+     * Calcola la media dell'importo delle spese per un mese e anno specifici.
+     * Sfrutta il database per il calcolo matematico (AVG).
+     *
+     * @param userId L'ID dell'utente.
+     * @param year   L'anno di riferimento (es. 2025).
+     * @param month  Il mese di riferimento (1-12).
+     * @return Il valore medio delle spese in quel mese. Ritorna 0.0 se non ci sono spese.
+     */
+    public double getMonthlyAverage(int userId, int year, int month) {
+        double media = 0.0;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            Connection conn = DbConnection.getInstance().getConnection();
+            pstmt = conn.prepareStatement(AVG_MONTHLY_QUERY);
+
+            // 1. Set User ID
+            pstmt.setInt(1, userId);
+
+            // 2. Set Data (LIKE 'YYYY-MM%')
+            // String.format("%d-%02d%%", year, month) costruisce una stringa come "2025-01%"
+            // %d = numero intero
+            // %02d = numero intero a 2 cifre (aggiunge lo zero se serve, es. 1 diventa 01)
+            // %% = il carattere percentuale per la query SQL LIKE
+            String dateFilter = String.format("%d-%02d%%", year, month);
+            pstmt.setString(2, dateFilter);
+
+            rs = pstmt.executeQuery();
+
+            // Se la query ha prodotto un risultato
+            if (rs.next()) {
+                // Prendi il valore della prima colonna calcolata (AVG)
+                media = rs.getDouble(1);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Errore nel calcolo della media mensile: " + e.getMessage());
+        } finally {
+            DatabaseHelper.close(pstmt, rs);
+        }
+        return media;
+    }
+    /**
+     * Calcola il totale delle spese effettuate in un determinato anno.
+     *
+     * @param userId L'ID dell'utente.
+     * @param year   L'anno di riferimento (es. 2025).
+     * @return La somma totale delle spese di quell'anno.
+     */
+    public double getAnnualTotal(int userId, int year) {
+        double totale = 0.0;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            Connection conn = DbConnection.getInstance().getConnection();
+            pstmt = conn.prepareStatement(TOTAL_ANNUAL_QUERY);
+
+            // 1. Set User ID
+            pstmt.setInt(1, userId);
+
+            // 2. Set Data (LIKE 'YYYY%')
+            // String.format("%d%%", year) costruisce una stringa come "2025%"
+            // Questo cercherà tutte le date che iniziano con quell'anno
+            String dateFilter = String.format("%d%%", year);
+            pstmt.setString(2, dateFilter);
+
+            rs = pstmt.executeQuery();
+
+            // Se la query produce un risultato
+            if (rs.next()) {
+                // Recuperiamo la somma calcolata dal database (SUM)
+                totale = rs.getDouble(1);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Errore nel calcolo del totale annuale: " + e.getMessage());
+        } finally {
+            DatabaseHelper.close(pstmt, rs);
+        }
+        return totale;
     }
 }

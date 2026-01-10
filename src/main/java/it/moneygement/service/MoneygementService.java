@@ -12,6 +12,7 @@ import it.moneygement.utils.UserSession;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Service Layer: Lo "Chef" dell'applicazione.
@@ -226,5 +227,49 @@ public class MoneygementService {
             throw new RisorsaNonTrovataException("Nessuna spesa per questa categoria: " + cat.name());
         }
         return spese;
+    }
+
+    /**
+     * Cerca le spese in una specifica data
+     * @param data la data nella quale si vuole ricercare una spesa
+     * @return la lista delle spese in quella data
+     * @throws RisorsaNonTrovataException nel caso in quella data non ci fosse una spesa
+     */
+    public List<Expense> searchByDate(LocalDateTime data) throws RisorsaNonTrovataException{
+        int userId = UserSession.getInstance().getUser().getId();
+
+        //Formatto la data in stringa
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String dataStr = data.format(formatter);
+        List<Expense> spese = expenseDAO.searchByDate(userId, dataStr);
+
+        if(spese.isEmpty()){
+            throw new RisorsaNonTrovataException("Nessuna spesa in questa data: " + dataStr);
+        }
+        return spese;
+    }
+
+    /**
+     * Calcola il totale speso dall'utente loggato in un anno specifico.
+     * * @param year L'anno di riferimento.
+     * @return La somma totale delle spese.
+     */
+    public double getAnnualTotal(int year) {
+        int userId = UserSession.getInstance().getUser().getId();
+        return expenseDAO.getAnnualTotal(userId, year);
+    }
+
+    /**
+     * Calcola la media mensile delle spese per l'utente loggato.
+     * * @param year L'anno di riferimento.
+     * @param month Il mese di riferimento (1-12).
+     * @return La media delle spese calcolata dal database.
+     */
+    public double getMonthlyAverage(int year, int month) {
+        // 1. Recuperiamo chi sta facendo la richiesta
+        int userId = UserSession.getInstance().getUser().getId();
+
+        // 2. Chiediamo al DAO di fare il calcolo
+        return expenseDAO.getMonthlyAverage(userId, year, month);
     }
 }
